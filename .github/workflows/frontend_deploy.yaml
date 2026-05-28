@@ -32,21 +32,20 @@ jobs:
           cd frontend/
           echo "${{ secrets.FRONTEND_ENV }}" > .env.prod
           pnpm install --no-frozen-lockfile
-          # Use secret if set, otherwise fall back to default project name
-          RESOLVED_NAME="${FRONTEND_NAME:-cloudflare-temp-email-frontend}"
+          RESOLVED_NAME="${{ secrets.FRONTEND_NAME }}"
+          RESOLVED_NAME="${RESOLVED_NAME:-cloudflare-temp-email-frontend}"
           export frontend_branch="${{ secrets.FRONTEND_BRANCH }}"
           if [ -n "$frontend_branch" ]; then
             echo "Deploying branch $frontend_branch"
-            pnpm run deploy:actions --project-name=$RESOLVED_NAME --branch $frontend_branch
+            pnpm run deploy:actions --project-name="$RESOLVED_NAME" --branch "$frontend_branch"
           else
             echo "Deploying branch production"
-            pnpm run deploy --project-name=$RESOLVED_NAME
+            pnpm run deploy --project-name="$RESOLVED_NAME"
           fi
           echo "Deployed for tag ${{ github.ref_name }}"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          FRONTEND_NAME: ${{ secrets.FRONTEND_NAME }}
 
   deploy-telegram-frontend:
     runs-on: ubuntu-latest
@@ -66,7 +65,7 @@ jobs:
           run_install: false
 
       - name: Deploy Telegram Frontend for ${{ github.ref_name }}
-        if: ${{ env.TG_FRONTEND_NAME != '' }}
+        if: ${{ secrets.TG_FRONTEND_NAME != '' }}
         run: |
           cd frontend/
           echo "${{ secrets.FRONTEND_ENV }}" > .env.prod
@@ -74,13 +73,12 @@ jobs:
           export frontend_branch="${{ secrets.FRONTEND_BRANCH }}"
           if [ -n "$frontend_branch" ]; then
             echo "Deploying telegram mini app branch $frontend_branch"
-            pnpm run deploy:actions:telegram --project-name=$TG_FRONTEND_NAME --branch $frontend_branch
+            pnpm run deploy:actions:telegram --project-name="${{ secrets.TG_FRONTEND_NAME }}" --branch "$frontend_branch"
           else
             echo "Deploying telegram mini app branch production"
-            pnpm run deploy:telegram --project-name=$TG_FRONTEND_NAME
+            pnpm run deploy:telegram --project-name="${{ secrets.TG_FRONTEND_NAME }}"
           fi
           echo "Deployed telegram mini app for ${{ github.ref_name }}"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          TG_FRONTEND_NAME: ${{ secrets.TG_FRONTEND_NAME }}
