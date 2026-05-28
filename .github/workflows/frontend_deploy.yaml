@@ -28,18 +28,19 @@ jobs:
           run_install: false
 
       - name: Deploy Frontend for ${{ github.ref_name }}
-        if: ${{ env.FRONTEND_NAME != '' }}
         run: |
           cd frontend/
           echo "${{ secrets.FRONTEND_ENV }}" > .env.prod
           pnpm install --no-frozen-lockfile
+          # Use secret if set, otherwise fall back to default project name
+          RESOLVED_NAME="${FRONTEND_NAME:-cloudflare-temp-email-frontend}"
           export frontend_branch="${{ secrets.FRONTEND_BRANCH }}"
           if [ -n "$frontend_branch" ]; then
             echo "Deploying branch $frontend_branch"
-            pnpm run deploy:actions --project-name=$FRONTEND_NAME --branch $frontend_branch
+            pnpm run deploy:actions --project-name=$RESOLVED_NAME --branch $frontend_branch
           else
             echo "Deploying branch production"
-            pnpm run deploy --project-name=$FRONTEND_NAME
+            pnpm run deploy --project-name=$RESOLVED_NAME
           fi
           echo "Deployed for tag ${{ github.ref_name }}"
         env:
